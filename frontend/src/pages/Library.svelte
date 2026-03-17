@@ -1,5 +1,5 @@
 <script>
-  import { library, selection, toggleSelect, clearSelection, selectRange } from '../lib/store.js'
+  import { library, selection, toggleSelect, selectRange } from '../lib/store.js'
   import VirtualList from '../components/VirtualList.svelte'
   import TrackRow from '../components/TrackRow.svelte'
   import BulkActionBar from '../components/BulkActionBar.svelte'
@@ -15,11 +15,14 @@
   )
 
   $: sorted = [...filtered].sort((a, b) => {
-    if (sortKey === 'title')  return a.title.localeCompare(b.title)
-    if (sortKey === 'artist') return (a.artists?.[0]?.name ?? '').localeCompare(b.artists?.[0]?.name ?? '')
-    if (sortKey === 'album')  return (a.album?.name ?? '').localeCompare(b.album?.name ?? '')
+    if (sortKey === 'title')     return a.title.localeCompare(b.title)
+    if (sortKey === 'artist')    return (a.artists?.[0]?.name ?? '').localeCompare(b.artists?.[0]?.name ?? '')
+    if (sortKey === 'album')     return (a.album?.name ?? '').localeCompare(b.album?.name ?? '')
+    if (sortKey === 'dateAdded') return 0  // preserve API order (already date-ordered from ytmusicapi)
     return 0
   })
+
+  $: filter, sortKey, (lastClickedIndex = null)
 
   function handleSelect(e, index) {
     if (e.detail.shiftKey && lastClickedIndex !== null) {
@@ -47,6 +50,7 @@
       <option value="title">Title</option>
       <option value="artist">Artist</option>
       <option value="album">Album</option>
+      <option value="dateAdded">Date Added</option>
     </select>
     <span class="count">{sorted.length} songs</span>
   </div>
@@ -65,7 +69,7 @@
 
   <BulkActionBar
     actions={bulkActions}
-    on:addtoplaylist={() => alert('Playlist picker — implement as needed')}
+    on:addtoplaylist={() => { /* TODO: open playlist picker */ }}
   />
 </div>
 
