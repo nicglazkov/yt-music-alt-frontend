@@ -21,10 +21,10 @@ Not officially supported or endorsed by Google.
 
 ## Setup & Initialization
 
-Authentication uses OAuth (the only method used in this project). Run once to generate the token file:
+Authentication uses **browser auth** — headers and cookies captured from a logged-in YouTube Music session. Run once to generate the auth file:
 
 ```bash
-ytmusicapi oauth
+ytmusicapi browser
 ```
 
 Initialize the client in code:
@@ -32,7 +32,7 @@ Initialize the client in code:
 ```python
 from ytmusicapi import YTMusic
 
-ytm = YTMusic("oauth.json")
+ytm = YTMusic("browser.json")
 ```
 
 Common operations:
@@ -68,8 +68,8 @@ Full API docs: https://ytmusicapi.readthedocs.io
 
 | Situation | Behavior |
 |---|---|
-| Token expired | Auto-refreshes transparently |
-| Token revoked by Google | Raises auth error — re-run `ytmusicapi oauth` |
+| Session expired | Raises auth error — re-run `ytmusicapi browser` to regenerate `browser.json` |
+| Session revoked (signed out) | Raises auth error — re-run `ytmusicapi browser` |
 | Rate limited | HTTP 429 response |
 | YouTube API change | May raise parse errors — update the library |
 
@@ -82,11 +82,14 @@ pip install --upgrade ytmusicapi
 
 ## Credentials
 
-The OAuth token file (`oauth.json`) grants access to this YouTube Music account. Standard good practice:
+`browser.json` contains browser session cookies for your Google account — treat it like a password. Standard good practice:
 
-- Keep it out of the project directory and out of git (add to `.gitignore`)
-- Store at a path like `~/.config/ytmusicapi/oauth.json` and pass that path to `YTMusic()`
-- If you ever need to revoke access: [myaccount.google.com/permissions](https://myaccount.google.com/permissions)
+- Keep it out of git (`.gitignore` covers it)
+- Mount it read-only into the container; never bake it into the image
+- If you need to invalidate it: sign out of the browser session you used to generate it, or change your Google account password
+- `browser.json` does not appear in myaccount.google.com/permissions (unlike OAuth tokens); revocation is via signing out
+
+**Note:** OAuth auth was attempted first but YouTube Music's internal API (`youtubei/v1`) rejects third-party OAuth Bearer tokens with HTTP 400. Browser auth is the approach that works.
 
 ---
 
