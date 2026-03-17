@@ -8,6 +8,7 @@ __pycache__/
 
 # Credentials — never commit
 oauth.json
+browser.json
 
 # Node
 node_modules/

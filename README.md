@@ -17,31 +17,9 @@ An alternative frontend for YouTube Music focused on library browsing and playli
 
 ## Setup
 
-### Step 1 — Generate `oauth.json` (one-time, manual)
+### Step 1 — Generate `browser.json` (one-time, manual)
 
-The app connects to YouTube Music using your account via OAuth. This requires creating your own Google OAuth credentials (free, takes ~5 minutes).
-
-#### 1a. Create Google OAuth credentials
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com) and create a new project (or select an existing one)
-2. Go to **APIs & Services → Library**, search for **YouTube Data API v3**, and click **Enable**
-3. Go to **APIs & Services → OAuth consent screen** (or **Google Auth Platform** in newer GCP UI):
-   - If you see "Google Auth Platform not configured yet", click **Get started**
-   - **App name:** anything (e.g. "yt-music-local")
-   - **User support email:** your Google account email
-   - **Audience:** choose **External**
-   - **Contact information:** your email again
-   - If prompted to add **scopes**, skip it — leave scopes empty and click through. `ytmusicapi` requests the scopes it needs at runtime; you don't need to configure them here
-   - Click through **Save and continue** on remaining screens until done
-   - Back on the OAuth consent screen, scroll to **Test users** and click **+ Add users** — add your Google account email
-   - The app stays in **Testing** mode permanently (you never need to publish it). Testing mode allows restricted YouTube scopes without Google verification, as long as your account is listed as a test user
-4. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
-   - Application type: **TVs and Limited Input devices**
-   - Name: anything
-   - Click **Create**
-5. Copy the **Client ID** and **Client Secret** shown in the confirmation dialog
-
-#### 1b. Generate `oauth.json`
+The app connects to YouTube Music using your account via browser-based authentication. This captures the cookies and headers from your logged-in YouTube Music session — no Google Cloud project needed.
 
 Install ytmusicapi on your machine (not inside Docker):
 
@@ -49,27 +27,33 @@ Install ytmusicapi on your machine (not inside Docker):
 pip install ytmusicapi
 ```
 
-Run the OAuth setup:
+Run the browser auth setup:
 
 ```bash
-ytmusicapi oauth
+ytmusicapi browser
 ```
 
-When prompted, paste your **Client ID**, then your **Client Secret**. It will print a URL — open it in a browser where you're signed into YouTube Music, grant access, and `oauth.json` will be written to the current directory.
+It will prompt you to paste your browser headers. Here's how to get them:
 
-Move it to the root of this repo:
+1. Open **[music.youtube.com](https://music.youtube.com)** in your browser and make sure you're signed in
+2. Open DevTools (`F12` or `Cmd+Option+I`)
+3. Go to the **Network** tab
+4. Refresh the page or click anything on YouTube Music
+5. Find a request to `music.youtube.com` (e.g. `browse` or `next`)
+6. Right-click it → **Copy** → **Copy as cURL**
+7. Paste the full cURL command into the terminal when prompted by `ytmusicapi browser`
+
+It will write `browser.json` to the current directory. Move it to the root of this repo:
 
 ```bash
-cp oauth.json /path/to/yt-music-alt-frontend/oauth.json
+cp browser.json /path/to/yt-music-alt-frontend/browser.json
 ```
 
-`oauth.json` is listed in `.gitignore` and must never be committed.
+`browser.json` is listed in `.gitignore` and must never be committed.
 
 ---
 
 ### Step 2 — Create your `.env` file
-
-Copy the example and set your password:
 
 ```bash
 cp .env.example .env
@@ -79,12 +63,8 @@ Edit `.env`:
 
 ```
 APP_PASSWORD=your-secure-password-here
-OAUTH_PATH=oauth.json
-OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
-OAUTH_CLIENT_SECRET=your-client-secret
+AUTH_PATH=browser.json
 ```
-
-Your Client ID and Secret are the ones you copied from GCP in Step 1. `.env` is gitignored and never committed. `docker-compose.yml` reads from it automatically via `env_file: .env`.
 
 ---
 
@@ -121,9 +101,7 @@ Then open `http://<your-ip>:8000` on any device on the same network.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `APP_PASSWORD` | Yes | — | Password for browser login |
-| `OAUTH_PATH` | Yes | `oauth.json` | Path to your OAuth credentials file inside the container |
-| `OAUTH_CLIENT_ID` | Yes | — | Google OAuth client ID (from GCP credentials) |
-| `OAUTH_CLIENT_SECRET` | Yes | — | Google OAuth client secret (from GCP credentials) |
+| `AUTH_PATH` | No | `browser.json` | Path to your browser auth file inside the container |
 | `CORS_ORIGIN` | No | `http://localhost:5173` | Allowed CORS origin (only needed for local frontend dev) |
 
 ---
@@ -137,7 +115,7 @@ cd backend
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-APP_PASSWORD=dev OAUTH_PATH=../oauth.json uvicorn main:app --reload
+APP_PASSWORD=dev AUTH_PATH=../browser.json uvicorn main:app --reload
 ```
 
 **Frontend** (in a second terminal):
@@ -162,12 +140,12 @@ cd frontend && npm test
 
 ---
 
-## Refreshing your OAuth token
+## Refreshing your session
 
-YouTube Music OAuth tokens expire periodically. If the app stops fetching your library, regenerate `oauth.json`:
+YouTube Music browser sessions expire periodically. If the app stops fetching your library, regenerate `browser.json`:
 
 ```bash
-ytmusicapi oauth
+ytmusicapi browser
 ```
 
 Then restart the container:

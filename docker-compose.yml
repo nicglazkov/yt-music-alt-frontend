@@ -4,6 +4,6 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./oauth.json:/app/oauth.json:ro
+      - ./browser.json:/app/browser.json:ro
     env_file: .env
     restart: unless-stopped
