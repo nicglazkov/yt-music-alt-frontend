@@ -35,6 +35,12 @@ app.add_middleware(
 
 app.include_router(auth_router)
 
+from api import library_router, liked_router, search_router
+
+app.include_router(library_router)
+app.include_router(liked_router)
+app.include_router(search_router)
+
 
 @app.get("/api/health")
 def health():
@@ -44,9 +50,3 @@ def health():
 @app.get("/api/status", dependencies=[Depends(verify_token)])
 def status():
     return library_cache.status() if library_cache else {"error": "cache not ready"}
-
-
-# Placeholder — replaced in Task 4
-@app.get("/api/library", dependencies=[Depends(verify_token)])
-def library_placeholder():
-    return library_cache.get_library() if library_cache else []
