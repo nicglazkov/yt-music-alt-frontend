@@ -42,6 +42,13 @@ def test_load_populates_liked(mock_ytmusic):
     assert cache.get_liked()[0]["videoId"] == "bbb"
 
 
+def test_load_populates_playlists(mock_ytmusic):
+    cache = LibraryCache(ytmusic=mock_ytmusic)
+    asyncio.run(cache.load())
+    assert len(cache.get_playlists()) == 1
+    assert cache.get_playlists()[0]["playlistId"] == "PL1"
+
+
 def test_load_sets_last_sync_time(mock_ytmusic):
     cache = LibraryCache(ytmusic=mock_ytmusic)
     asyncio.run(cache.load())

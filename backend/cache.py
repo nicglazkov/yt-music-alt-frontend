@@ -19,21 +19,28 @@ class LibraryCache:
         self._sync_in_progress = True
         try:
             loop = asyncio.get_running_loop()
-            self._library = await loop.run_in_executor(
+            library = await loop.run_in_executor(
                 None, lambda: self._ytmusic.get_library_songs(limit=None) or []
             )
             liked_resp = await loop.run_in_executor(
                 None, lambda: self._ytmusic.get_liked_songs(limit=None) or {}
             )
-            self._liked = liked_resp.get("tracks", [])
-            self._playlists = await loop.run_in_executor(
+            playlists = await loop.run_in_executor(
                 None, lambda: self._ytmusic.get_library_playlists(limit=None) or []
             )
+            # Commit atomically — only if all three calls succeeded
+            self._library = library
+            self._liked = liked_resp.get("tracks", [])
+            self._playlists = playlists
             self._last_sync = time.time()
             self._rate_limited = False
         except Exception as e:
             if "429" in str(e):
                 self._rate_limited = True
+            else:
+                # Log non-rate-limit errors so they're diagnosable
+                import sys
+                print(f"[cache] load error: {e}", file=sys.stderr)
         finally:
             self._sync_in_progress = False
 
@@ -48,7 +55,11 @@ class LibraryCache:
     async def _background_refresh(self):
         while True:
             await asyncio.sleep(5 * 60)
-            await self.load()
+            try:
+                await self.load()
+            except Exception as e:
+                import sys
+                print(f"[cache] background refresh error: {e}", file=sys.stderr)
 
     def get_library(self) -> list:
         return self._library
