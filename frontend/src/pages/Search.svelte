@@ -55,11 +55,9 @@
             <span class="title">{r.title}</span>
             <span class="meta">{r.artists?.map(a => a.name).join(', ') ?? ''}</span>
           </div>
-          {#if r.inLibrary}
-            <span class="badge">In Library</span>
-          {:else}
-            <button on:click={() => addToLibrary(r)}>+ Library</button>
-          {/if}
+          <button disabled={r.inLibrary} on:click={() => addToLibrary(r)}>
+            {r.inLibrary ? 'In Library' : '+ Library'}
+          </button>
           <button on:click={() => like(r.videoId)}>♥</button>
         </div>
       {/each}
@@ -78,7 +76,7 @@
   .info { flex:1; min-width:0; }
   .title { display:block; color:#fff; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .meta { color:#666; font-size:0.78rem; }
-  .badge { color:#888; font-size:0.78rem; white-space:nowrap; }
   button { background:#333; border:none; color:#fff; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer; font-size:0.8rem; white-space:nowrap; }
-  button:hover { background:#444; }
+  button:hover:not(:disabled) { background:#444; }
+  button:disabled { opacity:0.5; cursor:default; }
 </style>
