@@ -36,7 +36,7 @@ The app connects to YouTube Music using your account via OAuth. This requires cr
    - Back on the OAuth consent screen, scroll to **Test users** and click **+ Add users** — add your Google account email
    - The app stays in **Testing** mode permanently (you never need to publish it). Testing mode allows restricted YouTube scopes without Google verification, as long as your account is listed as a test user
 4. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
-   - Application type: **Desktop app**
+   - Application type: **TVs and Limited Input devices**
    - Name: anything
    - Click **Create**
 5. Copy the **Client ID** and **Client Secret** shown in the confirmation dialog
