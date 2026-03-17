@@ -1,18 +1,23 @@
 const DB_NAME = 'ytmusic'
 const DB_VERSION = 1
 
+let _dbPromise = null
+
 function open() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION)
-    req.onupgradeneeded = e => {
-      const db = e.target.result
-      if (!db.objectStoreNames.contains('cache')) {
-        db.createObjectStore('cache', { keyPath: 'key' })
+  if (!_dbPromise) {
+    _dbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION)
+      req.onupgradeneeded = e => {
+        const db = e.target.result
+        if (!db.objectStoreNames.contains('cache')) {
+          db.createObjectStore('cache', { keyPath: 'key' })
+        }
       }
-    }
-    req.onsuccess = e => resolve(e.target.result)
-    req.onerror = e => reject(e.target.error)
-  })
+      req.onsuccess = e => resolve(e.target.result)
+      req.onerror = e => reject(e.target.error)
+    })
+  }
+  return _dbPromise
 }
 
 export async function dbGet(key) {

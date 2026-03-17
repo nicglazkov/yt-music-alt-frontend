@@ -19,7 +19,7 @@ export async function login(password) {
 
 export async function get(path) {
   const resp = await fetch(path, {
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    headers: authHeaders(),
   })
   if (resp.status === 401) { sessionStorage.removeItem('token'); throw new Error('Unauthorized') }
   if (!resp.ok) throw new Error(`Request failed: ${resp.status}`)

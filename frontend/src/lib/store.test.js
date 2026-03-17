@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { get } from 'svelte/store'
 import { library, selection, toggleSelect, clearSelection, selectRange } from './store.js'
 
 describe('store', () => {
+  beforeEach(() => {
+    clearSelection()
+  })
+
   it('library starts empty', () => {
     expect(get(library)).toEqual([])
   })
