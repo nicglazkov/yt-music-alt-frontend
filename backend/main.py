@@ -53,3 +53,12 @@ def health():
 @app.get("/api/status", dependencies=[Depends(verify_token)])
 def status():
     return library_cache.status() if library_cache else {"error": "cache not ready"}
+
+
+from pathlib import Path
+
+# Serve compiled Svelte app in production (static/ dir exists after Docker build)
+_static = Path(__file__).parent / "static"
+if _static.is_dir():
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/", StaticFiles(directory=str(_static), html=True), name="static")

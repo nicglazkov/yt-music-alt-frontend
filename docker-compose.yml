@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./oauth.json:/app/oauth.json:ro
+    environment:
+      - APP_PASSWORD=changeme
+      - OAUTH_PATH=/app/oauth.json
+    restart: unless-stopped
