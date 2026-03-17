@@ -19,26 +19,40 @@ An alternative frontend for YouTube Music focused on library browsing and playli
 
 ### Step 1 — Generate `oauth.json` (one-time, manual)
 
-The app connects to YouTube Music using your account via OAuth. You need to generate an `oauth.json` credential file once using [ytmusicapi](https://ytmusicapi.readthedocs.io).
+The app connects to YouTube Music using your account via OAuth. This requires creating your own Google OAuth credentials (free, takes ~5 minutes).
 
-**Install ytmusicapi on your machine** (not inside Docker):
+#### 1a. Create Google OAuth credentials
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) and create a new project (or select an existing one)
+2. Go to **APIs & Services → Library**, search for **YouTube Data API v3**, and click **Enable**
+3. Go to **APIs & Services → OAuth consent screen**:
+   - Choose **External**
+   - Fill in any app name (e.g. "yt-music-local")
+   - Add your Google account email as a **Test user** under the "Test users" section
+   - Save and continue through the remaining screens
+4. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
+   - Application type: **Desktop app**
+   - Name: anything
+   - Click **Create**
+5. Copy the **Client ID** and **Client Secret** shown in the confirmation dialog
+
+#### 1b. Generate `oauth.json`
+
+Install ytmusicapi on your machine (not inside Docker):
 
 ```bash
 pip install ytmusicapi
 ```
 
-**Run the OAuth setup:**
+Run the OAuth setup:
 
 ```bash
 ytmusicapi oauth
 ```
 
-This will:
-1. Print a URL — open it in a browser where you're signed into YouTube Music
-2. Grant access to the app
-3. Write an `oauth.json` file in the current directory
+When prompted, paste your **Client ID**, then your **Client Secret**. It will print a URL — open it in a browser where you're signed into YouTube Music, grant access, and `oauth.json` will be written to the current directory.
 
-Move or copy that file to the root of this repo:
+Move it to the root of this repo:
 
 ```bash
 cp oauth.json /path/to/yt-music-alt-frontend/oauth.json
