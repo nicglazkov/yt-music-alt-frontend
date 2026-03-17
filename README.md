@@ -67,17 +67,22 @@ cp oauth.json /path/to/yt-music-alt-frontend/oauth.json
 
 ---
 
-### Step 2 — Configure `docker-compose.yml`
+### Step 2 — Create your `.env` file
 
-Open `docker-compose.yml` and set your password:
+Copy the example and set your password:
 
-```yaml
-environment:
-  - APP_PASSWORD=your-secure-password-here
-  - OAUTH_PATH=/app/oauth.json
+```bash
+cp .env.example .env
 ```
 
-Replace `changeme` with a real password. This is the password you'll enter in the browser to access the app.
+Edit `.env`:
+
+```
+APP_PASSWORD=your-secure-password-here
+OAUTH_PATH=oauth.json
+```
+
+`.env` is gitignored and never committed. `docker-compose.yml` reads from it automatically via `env_file: .env`.
 
 ---
 
