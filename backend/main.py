@@ -10,8 +10,15 @@ library_cache: LibraryCache | None = None
 
 
 def _make_ytmusic():
-    from ytmusicapi import YTMusic
-    return YTMusic(os.environ.get("OAUTH_PATH", "oauth.json"))
+    from ytmusicapi import YTMusic, OAuthCredentials
+    client_id = os.environ.get("OAUTH_CLIENT_ID", "")
+    client_secret = os.environ.get("OAUTH_CLIENT_SECRET", "")
+    if not client_id or not client_secret:
+        raise RuntimeError("OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET must be set in .env")
+    return YTMusic(
+        os.environ.get("OAUTH_PATH", "oauth.json"),
+        oauth_credentials=OAuthCredentials(client_id=client_id, client_secret=client_secret),
+    )
 
 
 @asynccontextmanager

@@ -80,9 +80,11 @@ Edit `.env`:
 ```
 APP_PASSWORD=your-secure-password-here
 OAUTH_PATH=oauth.json
+OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
+OAUTH_CLIENT_SECRET=your-client-secret
 ```
 
-`.env` is gitignored and never committed. `docker-compose.yml` reads from it automatically via `env_file: .env`.
+Your Client ID and Secret are the ones you copied from GCP in Step 1. `.env` is gitignored and never committed. `docker-compose.yml` reads from it automatically via `env_file: .env`.
 
 ---
 
@@ -120,6 +122,8 @@ Then open `http://<your-ip>:8000` on any device on the same network.
 |---|---|---|---|
 | `APP_PASSWORD` | Yes | — | Password for browser login |
 | `OAUTH_PATH` | Yes | `oauth.json` | Path to your OAuth credentials file inside the container |
+| `OAUTH_CLIENT_ID` | Yes | — | Google OAuth client ID (from GCP credentials) |
+| `OAUTH_CLIENT_SECRET` | Yes | — | Google OAuth client secret (from GCP credentials) |
 | `CORS_ORIGIN` | No | `http://localhost:5173` | Allowed CORS origin (only needed for local frontend dev) |
 
 ---
