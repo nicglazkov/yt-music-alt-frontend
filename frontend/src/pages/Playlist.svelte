@@ -1,7 +1,7 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte'
   import { get as apiGet, post, patch } from '../lib/api.js'
-  import { selection, toggleSelect, clearSelection } from '../lib/store.js'
+  import { selection, toggleSelect, clearSelection, showToast } from '../lib/store.js'
   import VirtualList from '../components/VirtualList.svelte'
   import TrackRow from '../components/TrackRow.svelte'
   import BulkActionBar from '../components/BulkActionBar.svelte'
@@ -39,6 +39,7 @@
       await post(`/api/playlists/${playlistId}/tracks/remove`, { items })
     } catch {
       tracks = prev  // rollback on failure
+      showToast('Failed to update — changes reverted')
     }
   }
 

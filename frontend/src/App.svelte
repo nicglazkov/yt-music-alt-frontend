@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { get as apiGet, getToken } from './lib/api.js'
   import { dbGet, dbSet } from './lib/db.js'
-  import { library, liked, playlists, syncStatus } from './lib/store.js'
+  import { library, liked, playlists, syncStatus, toast, showToast } from './lib/store.js'
   import Login from './pages/Login.svelte'
   import Library from './pages/Library.svelte'
   import Playlists from './pages/Playlists.svelte'
@@ -12,8 +12,6 @@
   let authed = !!getToken()
   let activeTab = 'library'
   let loading = true
-  let toast = null
-
   const TABS = [
     { id: 'library', label: 'Library' },
     { id: 'playlists', label: 'Playlists' },
@@ -62,11 +60,6 @@
     ])
   }
 
-  function showToast(msg, duration = 3500) {
-    toast = msg
-    setTimeout(() => (toast = null), duration)
-  }
-
   onMount(async () => {
     if (authed) await loadData()
   })
@@ -103,8 +96,8 @@
       {/if}
     </main>
   </div>
-  {#if toast}
-    <div class="toast">{toast}</div>
+  {#if $toast}
+    <div class="toast">{$toast}</div>
   {/if}
 {/if}
 

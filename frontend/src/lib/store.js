@@ -21,6 +21,13 @@ export function clearSelection() {
   selection.set(new Set())
 }
 
+export const toast = writable(null)
+
+export function showToast(msg, duration = 3500) {
+  toast.set(msg)
+  setTimeout(() => toast.set(null), duration)
+}
+
 export function selectRange(items, fromIndex, toIndex) {
   const [start, end] = fromIndex <= toIndex ? [fromIndex, toIndex] : [toIndex, fromIndex]
   selection.update(s => {
