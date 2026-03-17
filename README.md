@@ -38,8 +38,8 @@ It will prompt you to paste your browser headers. Here's how to get them:
 1. Open **[music.youtube.com](https://music.youtube.com)** in your browser and make sure you're signed in
 2. Open DevTools (`F12` or `Cmd+Option+I`)
 3. Go to the **Network** tab
-4. Refresh the page or click anything on YouTube Music
-5. Find a request to `music.youtube.com` (e.g. `browse` or `next`)
+4. Reload the page (`Cmd+R` / `Ctrl+R`) — requests will appear in the Network tab
+5. Find any request with `music.youtube.com` in the URL (e.g. `browse`, `next`, or `search`)
 6. Right-click it → **Copy** → **Copy as cURL**
 7. Paste the full cURL command into the terminal when prompted by `ytmusicapi browser`
 
