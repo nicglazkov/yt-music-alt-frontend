@@ -1,5 +1,6 @@
 <script>
-  import { liked, selection, toggleSelect, clearSelection } from '../lib/store.js'
+  import { onDestroy } from 'svelte'
+  import { liked, selection, toggleSelect, clearSelection, showToast } from '../lib/store.js'
   import VirtualList from '../components/VirtualList.svelte'
   import TrackRow from '../components/TrackRow.svelte'
   import BulkActionBar from '../components/BulkActionBar.svelte'
@@ -13,10 +14,18 @@
 
   async function unlike() {
     const videoIds = [...$selection]
-    await post('/api/liked/unlike', { videoIds })
+    const prev = $liked
     liked.update(l => l.filter(t => !$selection.has(t.videoId)))
     clearSelection()
+    try {
+      await post('/api/liked/unlike', { videoIds })
+    } catch {
+      liked.set(prev)
+      showToast('Failed to unlike — changes reverted')
+    }
   }
+
+  onDestroy(() => clearSelection())
 
   const bulkActions = [{ label: 'Unlike', event: 'unlike' }]
 

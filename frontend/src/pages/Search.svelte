@@ -1,11 +1,13 @@
 <script>
   import { get as apiGet, post } from '../lib/api.js'
+  import { showToast } from '../lib/store.js'
 
   let query = ''
   let results = []
   let loading = false
   let searched = false
   let debounceTimer
+  let likedIds = new Set()
 
   function onInput() {
     clearTimeout(debounceTimer)
@@ -16,8 +18,14 @@
   async function search() {
     loading = true
     searched = true
-    results = await apiGet(`/api/search?q=${encodeURIComponent(query)}`)
-    loading = false
+    try {
+      results = await apiGet(`/api/search?q=${encodeURIComponent(query)}`)
+    } catch {
+      showToast('Search failed — please try again')
+      results = []
+    } finally {
+      loading = false
+    }
   }
 
   async function addToLibrary(r) {
@@ -28,7 +36,13 @@
   }
 
   async function like(videoId) {
-    await post('/api/liked', { videoIds: [videoId] })
+    likedIds = new Set([...likedIds, videoId])
+    try {
+      await post('/api/liked', { videoIds: [videoId] })
+    } catch {
+      likedIds = new Set([...likedIds].filter(id => id !== videoId))
+      showToast('Failed to like song')
+    }
   }
 </script>
 
@@ -58,7 +72,7 @@
           <button disabled={r.inLibrary} on:click={() => addToLibrary(r)}>
             {r.inLibrary ? 'In Library' : '+ Library'}
           </button>
-          <button on:click={() => like(r.videoId)}>♥</button>
+          <button disabled={likedIds.has(r.videoId)} on:click={() => like(r.videoId)}>♥</button>
         </div>
       {/each}
     {/if}
