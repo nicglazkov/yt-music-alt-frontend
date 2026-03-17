@@ -31,8 +31,10 @@ The app connects to YouTube Music using your account via OAuth. This requires cr
    - **User support email:** your Google account email
    - **Audience:** choose **External**
    - **Contact information:** your email again
+   - If prompted to add **scopes**, skip it — leave scopes empty and click through. `ytmusicapi` requests the scopes it needs at runtime; you don't need to configure them here
    - Click through **Save and continue** on remaining screens until done
    - Back on the OAuth consent screen, scroll to **Test users** and click **+ Add users** — add your Google account email
+   - The app stays in **Testing** mode permanently (you never need to publish it). Testing mode allows restricted YouTube scopes without Google verification, as long as your account is listed as a test user
 4. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
    - Application type: **Desktop app**
    - Name: anything
