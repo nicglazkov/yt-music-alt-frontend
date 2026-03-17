@@ -6,6 +6,7 @@ def test_search(client, auth_headers, mock_ytmusic):
     resp = client.get("/api/search?q=test", headers=auth_headers)
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
+    assert resp.json()[0]["inLibrary"] is False  # "xyz" not in SAMPLE_SONGS
 
 
 def test_search_marks_in_library(client, auth_headers, mock_ytmusic):

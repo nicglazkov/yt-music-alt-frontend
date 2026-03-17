@@ -14,7 +14,7 @@ def test_save_to_library(client, auth_headers, mock_ytmusic):
                        json={"feedbackTokens": ["token_abc"]},
                        headers=auth_headers)
     assert resp.status_code == 204
-    mock_ytmusic.edit_song_library_status.assert_called_once()
+    mock_ytmusic.edit_song_library_status.assert_called_once_with(["token_abc"], "ADD")
 
 
 def test_get_status(client, auth_headers):

@@ -52,10 +52,12 @@ def mock_cache(mock_ytmusic):
 def client(mock_cache):
     import main
     main.library_cache = mock_cache
-    return TestClient(main.app)
+    yield TestClient(main.app)
+    main.library_cache = None
 
 
 @pytest.fixture
 def auth_headers(client):
     resp = client.post("/api/login", json={"password": "testpassword"})
+    assert resp.status_code == 200
     return {"Authorization": f"Bearer {resp.json()['token']}"}
