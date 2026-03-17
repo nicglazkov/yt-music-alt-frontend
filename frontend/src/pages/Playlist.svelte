@@ -1,5 +1,5 @@
 <script>
-  import { onMount, createEventDispatcher } from 'svelte'
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte'
   import { get as apiGet, post, patch } from '../lib/api.js'
   import { selection, toggleSelect, clearSelection, showToast } from '../lib/store.js'
   import VirtualList from '../components/VirtualList.svelte'
@@ -14,17 +14,29 @@
   let loading = true
   let editing = false
   let newTitle = ''
+  let loadError = false
 
   onMount(async () => {
-    playlist = await apiGet(`/api/playlists/${playlistId}`)
-    tracks = playlist.tracks ?? []
-    loading = false
+    try {
+      playlist = await apiGet(`/api/playlists/${playlistId}`)
+      tracks = playlist.tracks ?? []
+    } catch {
+      loadError = true
+    } finally {
+      loading = false
+    }
   })
 
+  onDestroy(() => clearSelection())
+
   async function rename() {
-    await patch(`/api/playlists/${playlistId}`, { title: newTitle })
-    playlist = { ...playlist, title: newTitle }
-    editing = false
+    try {
+      await patch(`/api/playlists/${playlistId}`, { title: newTitle })
+      playlist = { ...playlist, title: newTitle }
+      editing = false
+    } catch {
+      showToast('Failed to rename — please try again')
+    }
   }
 
   async function removeTracks() {
@@ -62,7 +74,7 @@
       <button on:click={() => (editing = false)}>Cancel</button>
     {:else}
       <h2>{playlist?.title ?? ''}</h2>
-      <button on:click={() => { editing = true; newTitle = playlist.title }}>Rename</button>
+      <button disabled={!playlist} on:click={() => { editing = true; newTitle = playlist.title }}>Rename</button>
     {/if}
     <span class="count">{tracks.length} songs</span>
   </div>
@@ -70,6 +82,8 @@
   <div class="list" use:measureHeight>
     {#if loading}
       <p style="color:#888;padding:1rem">Loading...</p>
+    {:else if loadError}
+      <p style="color:#888;padding:1rem">Failed to load playlist.</p>
     {:else}
       <VirtualList items={tracks} rowHeight={60} height={containerHeight}>
         <svelte:fragment slot="default" let:item>

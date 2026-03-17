@@ -1,5 +1,5 @@
 <script>
-  import { playlists } from '../lib/store.js'
+  import { playlists, showToast } from '../lib/store.js'
   import { post, del, get as apiGet } from '../lib/api.js'
   import Playlist from './Playlist.svelte'
 
@@ -9,16 +9,24 @@
 
   async function createPlaylist() {
     if (!newTitle.trim()) return
-    await post('/api/playlists', { title: newTitle.trim() })
-    newTitle = ''
-    creating = false
-    playlists.set(await apiGet('/api/playlists'))
+    try {
+      await post('/api/playlists', { title: newTitle.trim() })
+      newTitle = ''
+      creating = false
+      playlists.set(await apiGet('/api/playlists'))
+    } catch {
+      showToast('Failed to create playlist')
+    }
   }
 
   async function deletePlaylist(id) {
     if (!confirm('Delete this playlist?')) return
-    await del(`/api/playlists/${id}`)
-    playlists.update(p => p.filter(pl => pl.playlistId !== id))
+    try {
+      await del(`/api/playlists/${id}`)
+      playlists.update(p => p.filter(pl => pl.playlistId !== id))
+    } catch {
+      showToast('Failed to delete playlist')
+    }
   }
 </script>
 

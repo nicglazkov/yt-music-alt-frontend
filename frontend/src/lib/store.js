@@ -23,9 +23,12 @@ export function clearSelection() {
 
 export const toast = writable(null)
 
+let _toastTimer = null
+
 export function showToast(msg, duration = 3500) {
+  if (_toastTimer) clearTimeout(_toastTimer)
   toast.set(msg)
-  setTimeout(() => toast.set(null), duration)
+  _toastTimer = setTimeout(() => { toast.set(null); _toastTimer = null }, duration)
 }
 
 export function selectRange(items, fromIndex, toIndex) {
