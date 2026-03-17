@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 from auth import verify_token
@@ -44,45 +45,62 @@ def list_playlists():
 
 
 @router.post("/playlists", status_code=204)
-def create_playlist(body: CreatePlaylist):
-    _cache()._ytmusic.create_playlist(body.title, "")
+async def create_playlist(body: CreatePlaylist):
+    cache = _cache()
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, lambda: cache._ytmusic.create_playlist(body.title, ""))
     return Response(status_code=204)
 
 
 @router.get("/playlists/{playlist_id}")
-def get_playlist(playlist_id: str):
-    return _cache()._ytmusic.get_playlist(playlist_id, limit=None)
+async def get_playlist(playlist_id: str):
+    cache = _cache()
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, lambda: cache._ytmusic.get_playlist(playlist_id, limit=None))
 
 
 @router.patch("/playlists/{playlist_id}", status_code=204)
-def rename_playlist(playlist_id: str, body: RenamePlaylist):
-    _cache()._ytmusic.edit_playlist(playlist_id, title=body.title)
+async def rename_playlist(playlist_id: str, body: RenamePlaylist):
+    cache = _cache()
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, lambda: cache._ytmusic.edit_playlist(playlist_id, title=body.title))
     return Response(status_code=204)
 
 
 @router.delete("/playlists/{playlist_id}", status_code=204)
-def delete_playlist(playlist_id: str):
-    _cache()._ytmusic.delete_playlist(playlist_id)
+async def delete_playlist(playlist_id: str):
+    cache = _cache()
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, lambda: cache._ytmusic.delete_playlist(playlist_id))
     return Response(status_code=204)
 
 
 @router.post("/playlists/{playlist_id}/tracks", status_code=204)
-def add_tracks(playlist_id: str, body: VideoIds):
-    _cache()._ytmusic.add_playlist_items(playlist_id, body.videoIds)
+async def add_tracks(playlist_id: str, body: VideoIds):
+    cache = _cache()
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, lambda: cache._ytmusic.add_playlist_items(playlist_id, body.videoIds))
     return Response(status_code=204)
 
 
 @router.post("/playlists/{playlist_id}/tracks/remove", status_code=204)
-def remove_tracks(playlist_id: str, body: RemoveTracks):
+async def remove_tracks(playlist_id: str, body: RemoveTracks):
+    cache = _cache()
+    loop = asyncio.get_running_loop()
     items = [{"videoId": item.videoId, "setVideoId": item.setVideoId} for item in body.items]
-    _cache()._ytmusic.remove_playlist_items(playlist_id, items)
+    await loop.run_in_executor(None, lambda: cache._ytmusic.remove_playlist_items(playlist_id, items))
     return Response(status_code=204)
 
 
 @router.patch("/playlists/{playlist_id}/tracks/reorder", status_code=204)
-def reorder_track(playlist_id: str, body: ReorderTrack):
-    _cache()._ytmusic.edit_playlist(
-        playlist_id,
-        moveItem=(body.setVideoId, body.moveAfterSetVideoId)
+async def reorder_track(playlist_id: str, body: ReorderTrack):
+    cache = _cache()
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(
+        None,
+        lambda: cache._ytmusic.edit_playlist(
+            playlist_id,
+            moveItem=(body.setVideoId, body.moveAfterSetVideoId)
+        )
     )
     return Response(status_code=204)

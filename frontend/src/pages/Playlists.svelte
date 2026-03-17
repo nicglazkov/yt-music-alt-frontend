@@ -9,10 +9,12 @@
 
   async function createPlaylist() {
     if (!newTitle.trim()) return
+    const title = newTitle.trim()
+    newTitle = ''
+    creating = false
     try {
-      await post('/api/playlists', { title: newTitle.trim() })
-      newTitle = ''
-      creating = false
+      await post('/api/playlists', { title })
+      // Re-fetch to get server-assigned playlistId and metadata
       playlists.set(await apiGet('/api/playlists'))
     } catch {
       showToast('Failed to create playlist')

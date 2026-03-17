@@ -33,7 +33,7 @@
     lastClickedIndex = index
   }
 
-  const bulkActions = [{ label: 'Add to Playlist', event: 'addtoplaylist' }]
+  const bulkActions = []
 
   let containerHeight = 500
   function measureHeight(node) {
@@ -67,10 +67,7 @@
     </VirtualList>
   </div>
 
-  <BulkActionBar
-    actions={bulkActions}
-    on:addtoplaylist={() => { /* TODO: open playlist picker */ }}
-  />
+  <BulkActionBar actions={bulkActions} />
 </div>
 
 <style>

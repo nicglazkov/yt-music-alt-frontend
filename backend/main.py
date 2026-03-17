@@ -1,4 +1,5 @@
 import os
+import sys
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,9 +26,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+_pw = os.environ.get("APP_PASSWORD", "")
+if not _pw:
+    print("WARNING: APP_PASSWORD is not set. The app will reject all login attempts.", file=sys.stderr)
+elif _pw == "changeme":
+    print("WARNING: APP_PASSWORD is set to the default 'changeme'. Change it before exposing to the network.", file=sys.stderr)
+
+_cors_origin = os.environ.get("CORS_ORIGIN", "http://localhost:5173")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[_cors_origin] if _cors_origin else [],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
