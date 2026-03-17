@@ -14,9 +14,8 @@
 </script>
 
 <div
-  class="scroller"
   style="height:{height}px;overflow-y:auto;"
-  on:scroll={e => (scrollTop = e.target.scrollTop)}
+  on:scroll={e => (scrollTop = e.currentTarget.scrollTop)}
 >
   <div style="height:{total}px;position:relative;">
     <div style="transform:translateY({offsetY}px);">
