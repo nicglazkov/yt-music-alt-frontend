@@ -55,6 +55,8 @@ def status():
     return library_cache.status() if library_cache else {"error": "cache not ready"}
 
 
+# NOTE: Static file mount must remain LAST — it catches all unmatched paths.
+# Adding routers after this line will cause them to be shadowed.
 from pathlib import Path
 
 # Serve compiled Svelte app in production (static/ dir exists after Docker build)
