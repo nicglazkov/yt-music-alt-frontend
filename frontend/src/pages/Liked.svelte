@@ -14,8 +14,8 @@
 
   async function unlike() {
     const videoIds = [...$selection]
-    const prev = $liked
-    liked.update(l => l.filter(t => !$selection.has(t.videoId)))
+    let prev
+    liked.update(l => { prev = l; return l.filter(t => !$selection.has(t.videoId)) })
     clearSelection()
     try {
       await post('/api/liked/unlike', { videoIds })
