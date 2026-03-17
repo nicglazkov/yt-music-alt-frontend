@@ -1,3 +1,4 @@
+import hmac
 import os
 import secrets
 import time
@@ -37,7 +38,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) 
 @router.post("/api/login")
 def login(req: LoginRequest):
     expected = os.environ.get("APP_PASSWORD", "")
-    if not expected or req.password != expected:
+    if not expected or not hmac.compare_digest(req.password, expected):
         raise HTTPException(status_code=401, detail={"error": "Invalid password"})
     token = secrets.token_urlsafe(32)
     _tokens[token] = time.time() + TOKEN_TTL

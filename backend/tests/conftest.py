@@ -1,9 +1,17 @@
 import os
 import pytest
 from fastapi.testclient import TestClient
+import auth
 
 os.environ.setdefault("APP_PASSWORD", "testpassword")
 os.environ.setdefault("OAUTH_PATH", "fake_oauth.json")
+
+
+@pytest.fixture(autouse=True)
+def clear_tokens():
+    auth._tokens.clear()
+    yield
+    auth._tokens.clear()
 
 
 @pytest.fixture
