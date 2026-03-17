@@ -5,6 +5,7 @@
   const dispatch = createEventDispatcher()
 </script>
 
+{#if track}
 <div class="row" class:selected>
   <input
     type="checkbox"
@@ -18,6 +19,7 @@
     </span>
   </div>
 </div>
+{/if}
 
 <style>
   .row { display:flex; align-items:center; gap:0.75rem; padding:0 1rem; height:100%; border-bottom:1px solid #1e1e1e; }
