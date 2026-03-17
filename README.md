@@ -25,11 +25,14 @@ The app connects to YouTube Music using your account via OAuth. This requires cr
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com) and create a new project (or select an existing one)
 2. Go to **APIs & Services → Library**, search for **YouTube Data API v3**, and click **Enable**
-3. Go to **APIs & Services → OAuth consent screen**:
-   - Choose **External**
-   - Fill in any app name (e.g. "yt-music-local")
-   - Add your Google account email as a **Test user** under the "Test users" section
-   - Save and continue through the remaining screens
+3. Go to **APIs & Services → OAuth consent screen** (or **Google Auth Platform** in newer GCP UI):
+   - If you see "Google Auth Platform not configured yet", click **Get started**
+   - **App name:** anything (e.g. "yt-music-local")
+   - **User support email:** your Google account email
+   - **Audience:** choose **External**
+   - **Contact information:** your email again
+   - Click through **Save and continue** on remaining screens until done
+   - Back on the OAuth consent screen, scroll to **Test users** and click **+ Add users** — add your Google account email
 4. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
    - Application type: **Desktop app**
    - Name: anything
