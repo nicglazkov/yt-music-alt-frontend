@@ -37,11 +37,12 @@ app.include_router(auth_router)
 
 # Deferred import: api modules do `import main as app_module` at call time,
 # so `app` and `library_cache` must be defined before api is imported.
-from api import library_router, liked_router, search_router
+from api import library_router, liked_router, search_router, playlists_router
 
 app.include_router(library_router)
 app.include_router(liked_router)
 app.include_router(search_router)
+app.include_router(playlists_router)
 
 
 @app.get("/api/health")
