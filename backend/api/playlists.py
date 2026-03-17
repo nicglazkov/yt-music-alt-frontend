@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
-from typing import Optional
 from auth import verify_token
 import main as app_module
 
@@ -30,7 +29,7 @@ class RemoveTracks(BaseModel):
 
 class ReorderTrack(BaseModel):
     setVideoId: str
-    moveAfterSetVideoId: Optional[str] = None
+    moveAfterSetVideoId: str | None = None
 
 
 def _cache():

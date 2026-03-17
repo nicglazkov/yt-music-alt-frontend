@@ -26,7 +26,7 @@ def test_create_playlist(client, auth_headers, mock_ytmusic):
 def test_rename_playlist(client, auth_headers, mock_ytmusic):
     resp = client.patch("/api/playlists/PL1", json={"title": "Renamed"}, headers=auth_headers)
     assert resp.status_code == 204
-    mock_ytmusic.edit_playlist.assert_called()
+    mock_ytmusic.edit_playlist.assert_called_once_with("PL1", title="Renamed")
 
 
 def test_delete_playlist(client, auth_headers, mock_ytmusic):
@@ -39,7 +39,7 @@ def test_add_tracks(client, auth_headers, mock_ytmusic):
     resp = client.post("/api/playlists/PL1/tracks",
                        json={"videoIds": ["aaa"]}, headers=auth_headers)
     assert resp.status_code == 204
-    mock_ytmusic.add_playlist_items.assert_called()
+    mock_ytmusic.add_playlist_items.assert_called_once_with("PL1", ["aaa"])
 
 
 def test_remove_tracks(client, auth_headers, mock_ytmusic):
@@ -57,4 +57,4 @@ def test_reorder_tracks(client, auth_headers, mock_ytmusic):
                         json={"setVideoId": "sv1", "moveAfterSetVideoId": None},
                         headers=auth_headers)
     assert resp.status_code == 204
-    mock_ytmusic.edit_playlist.assert_called()
+    mock_ytmusic.edit_playlist.assert_called_once_with("PL1", moveItem=("sv1", None))
