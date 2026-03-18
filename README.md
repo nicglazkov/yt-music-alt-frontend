@@ -33,21 +33,26 @@ Run the browser auth setup:
 ytmusicapi browser
 ```
 
-It will prompt you to paste your browser headers. Here's how to get them (requires **Chrome 145+**):
+It will prompt you to paste your browser headers. Here's how to get them on **Chrome 145+**:
+
+> Chrome 145 removed "Copy request headers" from DevTools. The workaround is to use "Copy as cURL" (which includes the full cookie) and convert it with a small Python one-liner.
 
 1. Open **[music.youtube.com](https://music.youtube.com)** in Chrome and make sure you're signed in
-2. Open DevTools (`F12` or `Cmd+Option+I`) and go to the **Console** tab
-3. Paste and run this snippet:
+2. Open DevTools (`Cmd+Option+I`) → **Network** tab
+3. Reload the page — requests will appear in the list
+4. Find any request with `browse` in the URL, right-click it → **Copy** → **Copy as cURL**
+5. In your terminal, run:
 
-```js
-const formatted = Object.entries(window._capturedHeaders)
-  .map(([k, v]) => `${k}: ${v}`)
-  .join('\n') + '\ncookie: ' + document.cookie;
-console.log(formatted);
+```bash
+pbpaste | python3 -c "
+import re, sys
+curl = sys.stdin.read()
+headers = re.findall(r\"-H '([^']+)'\", curl)
+print('\n'.join(headers))
+" | ytmusicapi browser
 ```
 
-4. Copy the full output from the console
-5. Paste it into the terminal when prompted by `ytmusicapi browser`, then press `Ctrl-D`
+6. Press `Ctrl-D` when `ytmusicapi browser` prompts you to finish
 
 It will write `browser.json` to the current directory. Move it to the root of this repo:
 
