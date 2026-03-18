@@ -35,7 +35,7 @@
   .row:hover { background:#1a1a1a; }
   .row.selected { background:#1e1a2e; }
   input[type="checkbox"] { flex-shrink:0; accent-color:#ff0033; cursor:pointer; }
-  .thumb { width:40px; height:40px; object-fit:cover; border-radius:3px; flex-shrink:0; }
+  .thumb { width:var(--thumb-size, 40px); height:var(--thumb-size, 40px); object-fit:cover; border-radius:3px; flex-shrink:0; }
   .thumb-placeholder { background:#2a2a2a; border-radius:3px; }
   .info { display:flex; flex-direction:column; gap:2px; min-width:0; }
   .title { color:#fff; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

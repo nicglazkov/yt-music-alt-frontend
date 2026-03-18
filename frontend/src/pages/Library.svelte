@@ -1,5 +1,5 @@
 <script>
-  import { library, selection, toggleSelect, selectRange } from '../lib/store.js'
+  import { library, selection, toggleSelect, selectRange, settings, ROW_SIZES } from '../lib/store.js'
   import VirtualList from '../components/VirtualList.svelte'
   import TrackRow from '../components/TrackRow.svelte'
   import BulkActionBar from '../components/BulkActionBar.svelte'
@@ -56,7 +56,7 @@
   </div>
 
   <div class="list" use:measureHeight>
-    <VirtualList items={sorted} rowHeight={60} height={containerHeight}>
+    <VirtualList items={sorted} rowHeight={ROW_SIZES[$settings.rowSize].rowHeight} height={containerHeight}>
       <svelte:fragment slot="default" let:item let:index>
         <TrackRow
           track={item}

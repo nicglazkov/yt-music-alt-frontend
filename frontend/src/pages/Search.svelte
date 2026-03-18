@@ -8,6 +8,7 @@
   let searched = false
   let debounceTimer
   let likedIds = new Set()
+  let failedThumbs = new Set()
 
   function onInput() {
     clearTimeout(debounceTimer)
@@ -65,6 +66,12 @@
     {:else}
       {#each results as r (r.videoId)}
         <div class="row">
+          {#if r.thumbnails?.[0]?.url && !failedThumbs.has(r.videoId)}
+            <img class="thumb" src={r.thumbnails[0].url} alt="" aria-hidden="true"
+              on:error={() => (failedThumbs = new Set([...failedThumbs, r.videoId]))} />
+          {:else}
+            <div class="thumb thumb-placeholder"></div>
+          {/if}
           <div class="info">
             <span class="title">{r.title}</span>
             <span class="meta">{r.artists?.map(a => a.name).join(', ') ?? ''}</span>
@@ -85,8 +92,10 @@
   .search-input { width:100%; background:#111; border:1px solid #333; border-radius:4px; color:#fff; padding:0.5rem 0.75rem; font-size:1rem; box-sizing:border-box; }
   .results { flex:1; overflow-y:auto; }
   .hint { color:#555; padding:2rem 1rem; text-align:center; font-size:0.9rem; }
-  .row { display:flex; align-items:center; gap:0.5rem; padding:0.6rem 1rem; border-bottom:1px solid #1e1e1e; }
+  .row { display:flex; align-items:center; gap:0.75rem; padding:0 1rem; height:var(--row-height, 60px); border-bottom:1px solid #1e1e1e; }
   .row:hover { background:#1a1a1a; }
+  .thumb { width:var(--thumb-size, 40px); height:var(--thumb-size, 40px); object-fit:cover; border-radius:3px; flex-shrink:0; }
+  .thumb-placeholder { background:#2a2a2a; border-radius:3px; }
   .info { flex:1; min-width:0; }
   .title { display:block; color:#fff; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .meta { color:#666; font-size:0.78rem; }

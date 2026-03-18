@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "8080:8000"
     volumes:
       - ./browser.json:/app/browser.json:ro
     env_file: .env

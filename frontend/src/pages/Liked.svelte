@@ -1,6 +1,6 @@
 <script>
   import { onDestroy } from 'svelte'
-  import { liked, selection, toggleSelect, clearSelection, showToast } from '../lib/store.js'
+  import { liked, selection, toggleSelect, clearSelection, showToast, settings, ROW_SIZES } from '../lib/store.js'
   import VirtualList from '../components/VirtualList.svelte'
   import TrackRow from '../components/TrackRow.svelte'
   import BulkActionBar from '../components/BulkActionBar.svelte'
@@ -43,7 +43,7 @@
     <span class="count">{filtered.length} songs</span>
   </div>
   <div class="list" use:measureHeight>
-    <VirtualList items={filtered} rowHeight={60} height={containerHeight}>
+    <VirtualList items={filtered} rowHeight={ROW_SIZES[$settings.rowSize].rowHeight} height={containerHeight}>
       <svelte:fragment slot="default" let:item>
         <TrackRow
           track={item}

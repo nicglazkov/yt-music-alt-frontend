@@ -1,5 +1,19 @@
 import { writable, derived } from 'svelte/store'
 
+export const ROW_SIZES = {
+  small:  { rowHeight: 44, thumbSize: 28 },
+  medium: { rowHeight: 60, thumbSize: 40 },
+  large:  { rowHeight: 76, thumbSize: 56 },
+}
+
+const _defaultSettings = { rowSize: 'medium' }
+const _savedSettings = (() => {
+  try { return JSON.parse(localStorage.getItem('settings') ?? 'null') ?? _defaultSettings }
+  catch { return _defaultSettings }
+})()
+export const settings = writable(_savedSettings)
+settings.subscribe(v => { try { localStorage.setItem('settings', JSON.stringify(v)) } catch {} })
+
 export const library = writable([])
 export const liked = writable([])
 export const playlists = writable([])

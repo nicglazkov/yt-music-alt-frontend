@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy, createEventDispatcher } from 'svelte'
   import { get as apiGet, post, patch } from '../lib/api.js'
-  import { selection, toggleSelect, clearSelection, showToast } from '../lib/store.js'
+  import { selection, toggleSelect, clearSelection, showToast, settings, ROW_SIZES } from '../lib/store.js'
   import VirtualList from '../components/VirtualList.svelte'
   import TrackRow from '../components/TrackRow.svelte'
   import BulkActionBar from '../components/BulkActionBar.svelte'
@@ -85,7 +85,7 @@
     {:else if loadError}
       <p style="color:#888;padding:1rem">Failed to load playlist.</p>
     {:else}
-      <VirtualList items={tracks} rowHeight={60} height={containerHeight}>
+      <VirtualList items={tracks} rowHeight={ROW_SIZES[$settings.rowSize].rowHeight} height={containerHeight}>
         <svelte:fragment slot="default" let:item>
           <TrackRow
             track={item}

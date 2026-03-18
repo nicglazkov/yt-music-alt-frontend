@@ -97,7 +97,7 @@ docker compose up --build
 
 The first build takes a few minutes (Node + Python dependencies). Subsequent starts are fast.
 
-Once running, open **http://localhost:8000** (or replace `localhost` with your machine's LAN IP to access from other devices).
+Once running, open **http://localhost:8080** (or replace `localhost` with your machine's LAN IP to access from other devices).
 
 ---
 
@@ -113,7 +113,7 @@ ipconfig getifaddr en0   # or ip route get 1 | awk '{print $7}'
 ipconfig
 ```
 
-Then open `http://<your-ip>:8000` on any device on the same network.
+Then open `http://<your-ip>:8080` on any device on the same network.
 
 ---
 
