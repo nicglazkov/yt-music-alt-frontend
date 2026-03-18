@@ -33,15 +33,21 @@ Run the browser auth setup:
 ytmusicapi browser
 ```
 
-It will prompt you to paste your browser headers. Here's how to get them:
+It will prompt you to paste your browser headers. Here's how to get them (requires **Chrome 135+**):
 
-1. Open **[music.youtube.com](https://music.youtube.com)** in your browser and make sure you're signed in
-2. Open DevTools (`F12` or `Cmd+Option+I`)
-3. Go to the **Network** tab
-4. Reload the page (`Cmd+R` / `Ctrl+R`) — requests will appear in the Network tab
-5. Find any request with `music.youtube.com` in the URL (e.g. `browse`, `next`, or `search`)
-6. Right-click it → **Copy** → **Copy as cURL**
-7. Paste the full cURL command into the terminal when prompted by `ytmusicapi browser`
+1. Open **[music.youtube.com](https://music.youtube.com)** in Chrome and make sure you're signed in
+2. Open DevTools (`F12` or `Cmd+Option+I`) and go to the **Console** tab
+3. Paste and run this snippet:
+
+```js
+const formatted = Object.entries(window._capturedHeaders)
+  .map(([k, v]) => `${k}: ${v}`)
+  .join('\n') + '\ncookie: ' + document.cookie;
+console.log(formatted);
+```
+
+4. Copy the full output from the console
+5. Paste it into the terminal when prompted by `ytmusicapi browser`, then press `Ctrl-D`
 
 It will write `browser.json` to the current directory. Move it to the root of this repo:
 
