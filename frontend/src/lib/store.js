@@ -1,9 +1,9 @@
 import { writable, derived } from 'svelte/store'
 
 export const ROW_SIZES = {
-  small:  { rowHeight: 44, thumbSize: 28 },
-  medium: { rowHeight: 60, thumbSize: 40 },
-  large:  { rowHeight: 76, thumbSize: 56 },
+  small:  { rowHeight: 60, thumbSize: 40 },
+  medium: { rowHeight: 76, thumbSize: 56 },
+  large:  { rowHeight: 96, thumbSize: 72 },
 }
 
 const _defaultSettings = { rowSize: 'medium' }
