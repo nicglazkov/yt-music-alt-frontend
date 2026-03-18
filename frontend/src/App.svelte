@@ -10,7 +10,12 @@
   import Search from './pages/Search.svelte'
 
   let authed = !!getToken()
-  let activeTab = 'library'
+  let activeTab = localStorage.getItem('activeTab') ?? 'library'
+
+  function setTab(id) {
+    activeTab = id
+    localStorage.setItem('activeTab', id)
+  }
   let loading = true
   const TABS = [
     { id: 'library', label: 'Library' },
@@ -72,7 +77,7 @@
     <nav>
       <span class="logo">♪ YTM</span>
       {#each TABS as tab}
-        <button class:active={activeTab === tab.id} on:click={() => activeTab = tab.id}>
+        <button class:active={activeTab === tab.id} on:click={() => setTab(tab.id)}>
           {tab.label}
         </button>
       {/each}
