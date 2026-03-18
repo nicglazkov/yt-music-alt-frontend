@@ -5,6 +5,8 @@
   const dispatch = createEventDispatcher()
 
   $: thumb = track?.thumbnails?.[0]?.url ?? null
+  let thumbError = false
+  $: thumb, (thumbError = false)
 </script>
 
 {#if track}
@@ -14,8 +16,8 @@
     checked={selected}
     on:click|stopPropagation={e => dispatch('select', { videoId: track.videoId, shiftKey: e.shiftKey })}
   />
-  {#if thumb}
-    <img class="thumb" src={thumb} alt="" aria-hidden="true" />
+  {#if thumb && !thumbError}
+    <img class="thumb" src={thumb} alt="" aria-hidden="true" on:error={() => thumbError = true} />
   {:else}
     <div class="thumb thumb-placeholder"></div>
   {/if}
