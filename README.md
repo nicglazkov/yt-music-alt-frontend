@@ -33,7 +33,7 @@ Run the browser auth setup:
 ytmusicapi browser
 ```
 
-It will prompt you to paste your browser headers. Here's how to get them (requires **Chrome 135+**):
+It will prompt you to paste your browser headers. Here's how to get them (requires **Chrome 145+**):
 
 1. Open **[music.youtube.com](https://music.youtube.com)** in Chrome and make sure you're signed in
 2. Open DevTools (`F12` or `Cmd+Option+I`) and go to the **Console** tab
