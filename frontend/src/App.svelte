@@ -107,6 +107,23 @@
         {/if}
       </div>
     </nav>
+    {#if $syncStatus.authError}
+      <div class="auth-error">
+        <div class="auth-error-title">⚠ Session expired — your library cannot be loaded</div>
+        <div class="auth-error-body">
+          <p>The YouTube Music session in <code>browser.json</code> has expired. Regenerate it to reconnect:</p>
+          <ol>
+            <li>Open <strong>music.youtube.com</strong> in Chrome (signed in) → DevTools → Network tab → reload the page</li>
+            <li>Find a <code>browse</code> request → right-click → <strong>Copy → Copy as cURL</strong></li>
+            <li>Run in your terminal:<br/>
+              <code>pbpaste | python3 -c "import re,sys; curl=sys.stdin.read(); print('\n'.join(re.findall(r\"-H '([^']+)'\", curl)))" | ytmusicapi browser</code>
+            </li>
+            <li>When prompted, also paste the <code>cookie:</code> line from the Headers tab, then press <strong>Ctrl-D</strong></li>
+            <li>Copy the new <code>browser.json</code> to the repo root, then run <strong>docker compose restart</strong></li>
+          </ol>
+        </div>
+      </div>
+    {/if}
     <main>
       {#if loading}
         <div class="loading">Loading your library...</div>
@@ -145,6 +162,12 @@
   .size-options button { flex:1; background:#2a2a2a; border:1px solid #333; color:#aaa; padding:0.35rem 0; border-radius:4px; cursor:pointer; font-size:0.82rem; }
   .size-options button:hover { background:#333; color:#fff; }
   .size-options button.active { background:#ff0033; border-color:#ff0033; color:#fff; }
+  .auth-error { background:#1a0f00; border-bottom:1px solid #7a4000; padding:1rem 1.5rem; flex-shrink:0; }
+  .auth-error-title { color:#ffaa44; font-weight:600; margin-bottom:0.5rem; }
+  .auth-error-body { color:#ccc; font-size:0.85rem; }
+  .auth-error-body p { margin:0 0 0.5rem; }
+  .auth-error-body ol { margin:0; padding-left:1.25rem; line-height:1.8; }
+  .auth-error-body code { background:#2a1800; color:#ffaa44; padding:0.1em 0.35em; border-radius:3px; font-size:0.82em; }
   main { flex:1; overflow:hidden; }
   .loading { display:flex; align-items:center; justify-content:center; height:100%; color:#888; }
   .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:0.6rem 1.2rem; border-radius:4px; font-size:0.9rem; z-index:100; }

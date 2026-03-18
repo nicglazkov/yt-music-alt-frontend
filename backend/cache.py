@@ -11,6 +11,7 @@ class LibraryCache:
         self._last_sync: float | None = None
         self._sync_in_progress = False
         self._rate_limited = False
+        self._auth_error = False
         self._refresh_task: asyncio.Task | None = None
 
     async def load(self):
@@ -34,11 +35,12 @@ class LibraryCache:
             self._playlists = playlists
             self._last_sync = time.time()
             self._rate_limited = False
+            self._auth_error = False
         except Exception as e:
             if "429" in str(e):
                 self._rate_limited = True
             else:
-                # Log non-rate-limit errors so they're diagnosable
+                self._auth_error = True
                 import sys
                 print(f"[cache] load error: {e}", file=sys.stderr)
         finally:
@@ -75,4 +77,5 @@ class LibraryCache:
             "lastSyncTime": self._last_sync,
             "syncInProgress": self._sync_in_progress,
             "rateLimited": self._rate_limited,
+            "authError": self._auth_error,
         }
