@@ -35,13 +35,15 @@ ytmusicapi browser
 
 It will prompt you to paste your browser headers. Here's how to get them on **Chrome 145+**:
 
-> Chrome 145 removed "Copy request headers" from DevTools. The workaround is to use "Copy as cURL" (which includes the full cookie) and convert it with a small Python one-liner.
+> Chrome 145 removed "Copy request headers" from DevTools, and "Copy as cURL" does not include the Cookie header. You need to get the non-cookie headers from cURL and add the cookie manually.
+
+**Part A — get the non-cookie headers:**
 
 1. Open **[music.youtube.com](https://music.youtube.com)** in Chrome and make sure you're signed in
 2. Open DevTools (`Cmd+Option+I`) → **Network** tab
-3. Reload the page — requests will appear in the list
+3. Reload the page
 4. Find any request with `browse` in the URL, right-click it → **Copy** → **Copy as cURL**
-5. In your terminal, run:
+5. In your terminal, run (this parses the cURL and pipes the headers to ytmusicapi — **don't press Ctrl-D yet**):
 
 ```bash
 pbpaste | python3 -c "
@@ -52,7 +54,15 @@ print('\n'.join(headers))
 " | ytmusicapi browser
 ```
 
-6. Press `Ctrl-D` when `ytmusicapi browser` prompts you to finish
+**Part B — add the cookie manually:**
+
+6. Back in DevTools, click the same `browse` request → **Headers** tab → scroll to **Request Headers** → find the `cookie` row and copy its full value
+7. In the terminal where `ytmusicapi browser` is still waiting, type `cookie: ` then paste the value, press Enter, then press `Ctrl-D`
+
+The output will look like:
+```
+cookie: VISITOR_INFO1_LIVE=xxxxx; PREF=xxxxx; ...
+```
 
 It will write `browser.json` to the current directory. Move it to the root of this repo:
 
