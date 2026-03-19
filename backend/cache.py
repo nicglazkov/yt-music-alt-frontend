@@ -17,32 +17,43 @@ class LibraryCache:
     async def load(self):
         if self._ytmusic is None:
             return
+        import sys
         self._sync_in_progress = True
+        loop = asyncio.get_running_loop()
+        any_auth_error = False
+        any_success = False
+
+        async def _fetch(name, fn):
+            nonlocal any_auth_error, any_success
+            try:
+                result = await loop.run_in_executor(None, fn)
+                any_success = True
+                return result
+            except Exception as e:
+                err = str(e)
+                print(f"[cache] {name} error: {err}", file=sys.stderr)
+                if "429" in err:
+                    self._rate_limited = True
+                elif any(s in err.lower() for s in ("sign in", "unauthorized", "unauthenticated", "credentials", "login required")):
+                    any_auth_error = True
+                return None
+
         try:
-            loop = asyncio.get_running_loop()
-            library = await loop.run_in_executor(
-                None, lambda: self._ytmusic.get_library_songs(limit=None) or []
-            )
-            liked_resp = await loop.run_in_executor(
-                None, lambda: self._ytmusic.get_liked_songs(limit=None) or {}
-            )
-            playlists = await loop.run_in_executor(
-                None, lambda: self._ytmusic.get_library_playlists(limit=None) or []
-            )
-            # Commit atomically — only if all three calls succeeded
-            self._library = library
-            self._liked = liked_resp.get("tracks", [])
-            self._playlists = playlists
-            self._last_sync = time.time()
-            self._rate_limited = False
-            self._auth_error = False
-        except Exception as e:
-            if "429" in str(e):
-                self._rate_limited = True
-            else:
-                self._auth_error = True
-                import sys
-                print(f"[cache] load error: {e}", file=sys.stderr)
+            library = await _fetch("library", lambda: self._ytmusic.get_library_songs(limit=None) or [])
+            liked_resp = await _fetch("liked", lambda: self._ytmusic.get_liked_songs(limit=None) or {})
+            playlists = await _fetch("playlists", lambda: self._ytmusic.get_library_playlists(limit=None) or [])
+
+            if library is not None:
+                self._library = library
+            if liked_resp is not None:
+                self._liked = liked_resp.get("tracks", [])
+            if playlists is not None:
+                self._playlists = playlists
+
+            if any_success:
+                self._last_sync = time.time()
+                self._rate_limited = False
+            self._auth_error = any_auth_error and not any_success
         finally:
             self._sync_in_progress = False
 

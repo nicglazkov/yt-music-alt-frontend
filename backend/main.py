@@ -69,6 +69,17 @@ def status():
     return library_cache.status() if library_cache else {"error": "cache not ready"}
 
 
+@app.post("/api/sync", dependencies=[Depends(verify_token)])
+async def manual_sync():
+    from fastapi import HTTPException
+    if not library_cache:
+        raise HTTPException(503, "Cache not ready")
+    if library_cache.status()["syncInProgress"]:
+        raise HTTPException(409, "Sync already in progress")
+    await library_cache.load()
+    return library_cache.status()
+
+
 # NOTE: Static file mount must remain LAST — it catches all unmatched paths.
 # Adding routers after this line will cause them to be shadowed.
 from pathlib import Path

@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte'
-  import { get as apiGet, getToken } from './lib/api.js'
+  import { get as apiGet, post, getToken } from './lib/api.js'
   import { dbGet, dbSet } from './lib/db.js'
   import { library, liked, playlists, syncStatus, toast, showToast, settings, ROW_SIZES } from './lib/store.js'
   import Login from './pages/Login.svelte'
@@ -12,9 +12,29 @@
   let authed = !!getToken()
   let activeTab = localStorage.getItem('activeTab') ?? 'library'
   let showSettings = false
+  let syncing = false
 
   $: rowSize = $settings.rowSize
   $: ({ thumbSize, rowHeight } = ROW_SIZES[rowSize])
+
+  $: _isSyncing = syncing || $syncStatus.syncInProgress
+  $: statusColor = _isSyncing ? 'yellow'
+      : $syncStatus.authError ? 'red'
+      : $syncStatus.rateLimited ? 'orange'
+      : $syncStatus.lastSyncTime ? 'green'
+      : 'grey'
+  $: statusText = _isSyncing ? 'Syncing…'
+      : $syncStatus.rateLimited ? 'Paused'
+      : $syncStatus.authError ? 'Auth error'
+      : $syncStatus.lastSyncTime
+        ? new Date($syncStatus.lastSyncTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : 'Never'
+  $: statusTitle = _isSyncing ? 'Sync in progress'
+      : $syncStatus.rateLimited ? 'Rate limited — sync paused'
+      : $syncStatus.authError ? 'Session expired — see banner below'
+      : $syncStatus.lastSyncTime
+        ? `Last synced at ${new Date($syncStatus.lastSyncTime * 1000).toLocaleTimeString()}`
+      : 'Not yet synced'
 
   function setTab(id) {
     activeTab = id
@@ -69,6 +89,20 @@
     ])
   }
 
+  async function manualSync() {
+    syncing = true
+    try {
+      const status = await post('/api/sync', {})
+      syncStatus.set(status)
+      await refreshFromServer(status.lastSyncTime)
+      showToast('Library synced')
+    } catch (e) {
+      showToast(e.message === 'Request failed: 409' ? 'Sync already in progress' : 'Sync failed')
+    } finally {
+      syncing = false
+    }
+  }
+
   onMount(async () => {
     if (authed) await loadData()
   })
@@ -85,26 +119,33 @@
           {tab.label}
         </button>
       {/each}
-      {#if $syncStatus.syncInProgress}
-        <span class="syncing">↻ Syncing</span>
-      {:else if $syncStatus.rateLimited}
-        <span class="rate-limited">Sync paused</span>
-      {/if}
-      <div class="settings-wrap">
-        <button class="settings-btn" on:click={() => showSettings = !showSettings} title="Settings">⚙</button>
-        {#if showSettings}
-          <div class="settings-panel">
-            <div class="settings-label">Row size</div>
-            <div class="size-options">
-              {#each ['small', 'medium', 'large'] as size}
-                <button
-                  class:active={$settings.rowSize === size}
-                  on:click={() => { settings.update(s => ({ ...s, rowSize: size })); showSettings = false }}
-                >{size[0].toUpperCase() + size.slice(1)}</button>
-              {/each}
+      <div class="nav-right">
+        <div class="sync-status" title={statusTitle}>
+          <span class="status-dot status-{statusColor}"></span>
+          <span class="status-text">{statusText}</span>
+        </div>
+        <button
+          class="sync-btn"
+          disabled={_isSyncing}
+          on:click={manualSync}
+          title="Sync library from YouTube Music"
+        >↻ Sync</button>
+        <div class="settings-wrap">
+          <button class="settings-btn" on:click={() => showSettings = !showSettings} title="Settings">⚙</button>
+          {#if showSettings}
+            <div class="settings-panel">
+              <div class="settings-label">Row size</div>
+              <div class="size-options">
+                {#each ['small', 'medium', 'large'] as size}
+                  <button
+                    class:active={$settings.rowSize === size}
+                    on:click={() => { settings.update(s => ({ ...s, rowSize: size })); showSettings = false }}
+                  >{size[0].toUpperCase() + size.slice(1)}</button>
+                {/each}
+              </div>
             </div>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
     </nav>
     {#if $syncStatus.authError}
@@ -151,9 +192,19 @@
   .logo { font-weight:700; color:#ff0033; padding:0.75rem 0.5rem; margin-right:0.5rem; }
   nav button { background:none; border:none; color:#888; padding:0.75rem; cursor:pointer; font-size:0.9rem; border-bottom:2px solid transparent; }
   nav button.active { color:#fff; border-bottom-color:#ff0033; }
-  .syncing { color:#888; font-size:0.78rem; }
-  .rate-limited { color:#ff6b6b; font-size:0.78rem; }
-  .settings-wrap { position:relative; margin-left:auto; }
+  .nav-right { display:flex; align-items:center; gap:0.5rem; margin-left:auto; }
+  .sync-status { display:flex; align-items:center; gap:0.35rem; cursor:default; padding:0 0.25rem; }
+  .status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .status-dot.status-green  { background:#44cc66; }
+  .status-dot.status-yellow { background:#ffcc00; }
+  .status-dot.status-red    { background:#ff4444; }
+  .status-dot.status-orange { background:#ff8800; }
+  .status-dot.status-grey   { background:#555; }
+  .status-text { color:#666; font-size:0.72rem; }
+  .sync-btn { background:none; border:1px solid #333; color:#888; padding:0.3rem 0.65rem; border-radius:4px; cursor:pointer; font-size:0.78rem; }
+  .sync-btn:hover:not(:disabled) { border-color:#555; color:#ccc; }
+  .sync-btn:disabled { opacity:0.5; cursor:default; }
+  .settings-wrap { position:relative; }
   .settings-btn { background:none; border:none; color:#888; padding:0.75rem 0.5rem; cursor:pointer; font-size:1rem; }
   .settings-btn:hover { color:#fff; }
   .settings-panel { position:absolute; right:0; top:100%; background:#1e1e1e; border:1px solid #333; border-radius:6px; padding:0.75rem; z-index:50; min-width:160px; }
