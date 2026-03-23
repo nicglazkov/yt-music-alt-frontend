@@ -1,12 +1,35 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher, onDestroy } from 'svelte'
+  import { thumbGet, thumbSet } from '../lib/db.js'
   export let track
   export let selected = false
   const dispatch = createEventDispatcher()
 
-  $: thumb = track?.thumbnails?.[0]?.url ?? null
+  let thumb = null
   let thumbError = false
-  $: thumb, (thumbError = false)
+  let _blobUrl = null
+  let _seq = 0
+
+  function _revoke() {
+    if (_blobUrl) { URL.revokeObjectURL(_blobUrl); _blobUrl = null }
+  }
+
+  $: if (track) {
+    const cdnUrl = track.thumbnails?.[0]?.url ?? null
+    const seq = ++_seq
+    thumbError = false
+    _revoke()
+    thumb = cdnUrl
+    if (cdnUrl && track.videoId) {
+      thumbGet(track.videoId).then(url => {
+        if (seq !== _seq) return
+        if (url) { _blobUrl = url; thumb = url }
+        else thumbSet(track.videoId, cdnUrl).catch(() => {})
+      }).catch(() => {})
+    }
+  }
+
+  onDestroy(_revoke)
 </script>
 
 {#if track}

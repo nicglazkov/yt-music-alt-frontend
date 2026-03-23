@@ -17,7 +17,7 @@ settings.subscribe(v => { try { localStorage.setItem('settings', JSON.stringify(
 export const library = writable([])
 export const liked = writable([])
 export const playlists = writable([])
-export const syncStatus = writable({ lastSyncTime: null, syncInProgress: false, rateLimited: false })
+export const syncStatus = writable({ lastSyncTime: null, syncInProgress: false, rateLimited: false, authError: false, endpoints: {} })
 export const selection = writable(new Set())
 
 export const hasSelection = derived(selection, $s => $s.size > 0)

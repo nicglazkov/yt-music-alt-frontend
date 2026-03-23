@@ -23,7 +23,7 @@ def _make_ytmusic():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global library_cache
-    library_cache = LibraryCache(ytmusic=_make_ytmusic())
+    library_cache = LibraryCache(ytmusic_factory=_make_ytmusic)
     await library_cache.startup()
     yield
     if library_cache:

@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { get as apiGet, post, getToken } from './lib/api.js'
-  import { dbGet, dbSet } from './lib/db.js'
+  import { dbGet, dbSet, thumbClear } from './lib/db.js'
   import { library, liked, playlists, syncStatus, toast, showToast, settings, ROW_SIZES } from './lib/store.js'
   import Login from './pages/Login.svelte'
   import Library from './pages/Library.svelte'
@@ -12,29 +12,47 @@
   let authed = !!getToken()
   let activeTab = localStorage.getItem('activeTab') ?? 'library'
   let showSettings = false
+  let showStatus = false
   let syncing = false
 
   $: rowSize = $settings.rowSize
   $: ({ thumbSize, rowHeight } = ROW_SIZES[rowSize])
 
   $: _isSyncing = syncing || $syncStatus.syncInProgress
+  $: _worstError = (() => {
+      const errs = Object.values($syncStatus.endpoints ?? {}).filter(e => e && e.ok === false).map(e => e.error)
+      return errs.includes('auth') ? 'auth' : errs.includes('rate_limited') ? 'rate_limited' : errs.includes('network') ? 'network' : null
+    })()
   $: statusColor = _isSyncing ? 'yellow'
-      : $syncStatus.authError ? 'red'
-      : $syncStatus.rateLimited ? 'orange'
+      : _worstError === 'auth' ? 'red'
+      : _worstError ? 'orange'
       : $syncStatus.lastSyncTime ? 'green'
       : 'grey'
   $: statusText = _isSyncing ? 'Syncing…'
-      : $syncStatus.rateLimited ? 'Paused'
-      : $syncStatus.authError ? 'Auth error'
+      : _worstError === 'auth' ? 'Auth error'
+      : _worstError === 'rate_limited' ? 'Rate limited'
+      : _worstError === 'network' ? 'Connection error'
       : $syncStatus.lastSyncTime
         ? new Date($syncStatus.lastSyncTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : 'Never'
-  $: statusTitle = _isSyncing ? 'Sync in progress'
-      : $syncStatus.rateLimited ? 'Rate limited — sync paused'
-      : $syncStatus.authError ? 'Session expired — see banner below'
-      : $syncStatus.lastSyncTime
-        ? `Last synced at ${new Date($syncStatus.lastSyncTime * 1000).toLocaleTimeString()}`
-      : 'Not yet synced'
+      : 'Never synced'
+
+  function epDotClass(s) {
+    if (!s || s.ok === null) return 'status-grey'
+    if (s.ok) return 'status-green'
+    if (s.error === 'auth') return 'status-red'
+    if (s.error === 'rate_limited') return 'status-orange'
+    return 'status-yellow'
+  }
+  function epText(s, key) {
+    if (!s || s.ok === null) return '—'
+    if (s.ok) {
+      const n = s.count.toLocaleString()
+      return key === 'playlists' ? `${n} playlist${s.count !== 1 ? 's' : ''}` : `${n} song${s.count !== 1 ? 's' : ''}`
+    }
+    if (s.error === 'auth') return 'Session expired'
+    if (s.error === 'rate_limited') return 'Rate limited'
+    return 'Connection error'
+  }
 
   function setTab(id) {
     activeTab = id
@@ -120,9 +138,35 @@
         </button>
       {/each}
       <div class="nav-right">
-        <div class="sync-status" title={statusTitle}>
-          <span class="status-dot status-{statusColor}"></span>
-          <span class="status-text">{statusText}</span>
+        <div class="sync-status-wrap">
+          <button class="sync-status" on:click={() => { showStatus = !showStatus; showSettings = false }}>
+            <span class="status-dot status-{statusColor}"></span>
+            <span class="status-text">{statusText}</span>
+          </button>
+          {#if showStatus}
+            <div class="status-panel">
+              <div class="status-panel-title">Connection Status</div>
+              {#each [
+                { key: 'library',   label: 'Library' },
+                { key: 'liked',     label: 'Liked Songs' },
+                { key: 'playlists', label: 'Playlists' },
+              ] as ep}
+                {@const s = ($syncStatus.endpoints ?? {})[ep.key]}
+                <div class="status-row">
+                  <span class="status-dot {epDotClass(s)}"></span>
+                  <span class="status-row-label">{ep.label}</span>
+                  <span class="status-row-value">{epText(s, ep.key)}</span>
+                </div>
+              {/each}
+              <div class="status-panel-footer">
+                {#if $syncStatus.lastSyncTime}
+                  Last synced {new Date($syncStatus.lastSyncTime * 1000).toLocaleTimeString()}
+                {:else}
+                  Never synced
+                {/if}
+              </div>
+            </div>
+          {/if}
         </div>
         <button
           class="sync-btn"
@@ -131,7 +175,7 @@
           title="Sync library from YouTube Music"
         >↻ Sync</button>
         <div class="settings-wrap">
-          <button class="settings-btn" on:click={() => showSettings = !showSettings} title="Settings">⚙</button>
+          <button class="settings-btn" on:click={() => { showSettings = !showSettings; showStatus = false }} title="Settings">⚙</button>
           {#if showSettings}
             <div class="settings-panel">
               <div class="settings-label">Row size</div>
@@ -143,6 +187,8 @@
                   >{size[0].toUpperCase() + size.slice(1)}</button>
                 {/each}
               </div>
+              <div class="settings-divider"></div>
+              <button class="settings-action" on:click={() => { thumbClear(); showToast('Thumbnail cache cleared'); showSettings = false }}>Clear thumbnail cache</button>
             </div>
           {/if}
         </div>
@@ -193,7 +239,9 @@
   nav button { background:none; border:none; color:#888; padding:0.75rem; cursor:pointer; font-size:0.9rem; border-bottom:2px solid transparent; }
   nav button.active { color:#fff; border-bottom-color:#ff0033; }
   .nav-right { display:flex; align-items:center; gap:0.5rem; margin-left:auto; }
-  .sync-status { display:flex; align-items:center; gap:0.35rem; cursor:default; padding:0 0.25rem; }
+  .sync-status-wrap { position:relative; }
+  .sync-status { display:flex; align-items:center; gap:0.35rem; background:none; border:none; cursor:pointer; padding:0.25rem; border-radius:4px; }
+  .sync-status:hover { background:#222; }
   .status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
   .status-dot.status-green  { background:#44cc66; }
   .status-dot.status-yellow { background:#ffcc00; }
@@ -201,6 +249,12 @@
   .status-dot.status-orange { background:#ff8800; }
   .status-dot.status-grey   { background:#555; }
   .status-text { color:#666; font-size:0.72rem; }
+  .status-panel { position:absolute; right:0; top:100%; background:#1e1e1e; border:1px solid #333; border-radius:6px; padding:0.75rem; z-index:50; min-width:210px; margin-top:0.25rem; }
+  .status-panel-title { color:#888; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.6rem; }
+  .status-row { display:flex; align-items:center; gap:0.5rem; padding:0.2rem 0; }
+  .status-row-label { color:#ccc; font-size:0.82rem; flex:1; }
+  .status-row-value { color:#666; font-size:0.78rem; text-align:right; }
+  .status-panel-footer { margin-top:0.6rem; padding-top:0.6rem; border-top:1px solid #2a2a2a; color:#555; font-size:0.72rem; }
   .sync-btn { background:none; border:1px solid #333; color:#888; padding:0.3rem 0.65rem; border-radius:4px; cursor:pointer; font-size:0.78rem; }
   .sync-btn:hover:not(:disabled) { border-color:#555; color:#ccc; }
   .sync-btn:disabled { opacity:0.5; cursor:default; }
@@ -213,6 +267,9 @@
   .size-options button { flex:1; background:#2a2a2a; border:1px solid #333; color:#aaa; padding:0.35rem 0; border-radius:4px; cursor:pointer; font-size:0.82rem; }
   .size-options button:hover { background:#333; color:#fff; }
   .size-options button.active { background:#ff0033; border-color:#ff0033; color:#fff; }
+  .settings-divider { border-top:1px solid #2a2a2a; margin:0.5rem 0; }
+  .settings-action { width:100%; background:none; border:1px solid #333; color:#888; padding:0.3rem 0.5rem; border-radius:4px; cursor:pointer; font-size:0.78rem; text-align:left; }
+  .settings-action:hover { border-color:#555; color:#ccc; }
   .auth-error { background:#1a0f00; border-bottom:1px solid #7a4000; padding:1rem 1.5rem; flex-shrink:0; }
   .auth-error-title { color:#ffaa44; font-weight:600; margin-bottom:0.5rem; }
   .auth-error-body { color:#ccc; font-size:0.85rem; }

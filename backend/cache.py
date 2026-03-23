@@ -3,8 +3,9 @@ import time
 
 
 class LibraryCache:
-    def __init__(self, ytmusic):
-        self._ytmusic = ytmusic
+    def __init__(self, ytmusic_factory):
+        self._ytmusic_factory = ytmusic_factory
+        self._ytmusic = None
         self._library: list = []
         self._liked: list = []
         self._playlists: list = []
@@ -13,13 +14,36 @@ class LibraryCache:
         self._rate_limited = False
         self._auth_error = False
         self._refresh_task: asyncio.Task | None = None
+        self._endpoint_status: dict = {
+            "library":   {"ok": None, "error": None, "count": 0},
+            "liked":     {"ok": None, "error": None, "count": 0},
+            "playlists": {"ok": None, "error": None, "count": 0},
+        }
+
+    @staticmethod
+    def _classify_error(err: str) -> str:
+        if "429" in err:
+            return "rate_limited"
+        if any(s in err.lower() for s in ("sign in", "unauthorized", "unauthenticated", "credentials", "login required")):
+            return "auth"
+        return "network"
 
     async def load(self):
-        if self._ytmusic is None:
-            return
         import sys
         self._sync_in_progress = True
         loop = asyncio.get_running_loop()
+
+        # Re-read browser.json on every sync so stale credentials are never reused
+        try:
+            self._ytmusic = await loop.run_in_executor(None, self._ytmusic_factory)
+        except Exception as e:
+            print(f"[cache] failed to initialise YTMusic: {e}", file=sys.stderr)
+            self._auth_error = True
+            self._sync_in_progress = False
+            return
+        if self._ytmusic is None:
+            self._sync_in_progress = False
+            return
         any_auth_error = False
         any_success = False
 
@@ -28,13 +52,16 @@ class LibraryCache:
             try:
                 result = await loop.run_in_executor(None, fn)
                 any_success = True
+                self._endpoint_status[name] = {"ok": True, "error": None, "count": 0}
                 return result
             except Exception as e:
                 err = str(e)
                 print(f"[cache] {name} error: {err}", file=sys.stderr)
-                if "429" in err:
+                error_type = self._classify_error(err)
+                self._endpoint_status[name] = {"ok": False, "error": error_type, "count": 0}
+                if error_type == "rate_limited":
                     self._rate_limited = True
-                elif any(s in err.lower() for s in ("sign in", "unauthorized", "unauthenticated", "credentials", "login required")):
+                elif error_type == "auth":
                     any_auth_error = True
                 return None
 
@@ -45,10 +72,13 @@ class LibraryCache:
 
             if library is not None:
                 self._library = library
+                self._endpoint_status["library"]["count"] = len(library)
             if liked_resp is not None:
                 self._liked = liked_resp.get("tracks", [])
+                self._endpoint_status["liked"]["count"] = len(self._liked)
             if playlists is not None:
                 self._playlists = playlists
+                self._endpoint_status["playlists"]["count"] = len(playlists)
 
             if any_success:
                 self._last_sync = time.time()
@@ -89,4 +119,5 @@ class LibraryCache:
             "syncInProgress": self._sync_in_progress,
             "rateLimited": self._rate_limited,
             "authError": self._auth_error,
+            "endpoints": self._endpoint_status,
         }
