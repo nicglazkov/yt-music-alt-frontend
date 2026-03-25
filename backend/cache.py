@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 
 
@@ -19,6 +20,23 @@ class LibraryCache:
             "liked":     {"ok": None, "error": None, "count": 0},
             "playlists": {"ok": None, "error": None, "count": 0},
         }
+
+    @staticmethod
+    def _patch_signin_detection(yt) -> None:
+        """Wrap ytmusicapi's session.post so every endpoint raises on sign-in pages.
+        Without this, get_library_songs / get_library_playlists silently return []
+        when the session expires, making it look like an empty library."""
+        orig_post = yt._session.post
+        def _checked_post(*a, **kw):
+            resp = orig_post(*a, **kw)
+            try:
+                data = json.loads(resp.text)
+                if "singleColumnBrowseResultsRenderer" in data:
+                    raise Exception("sign in: session expired")
+            except (json.JSONDecodeError, AttributeError):
+                pass
+            return resp
+        yt._session.post = _checked_post
 
     @staticmethod
     def _classify_error(err: str) -> str:
@@ -44,6 +62,9 @@ class LibraryCache:
         if self._ytmusic is None:
             self._sync_in_progress = False
             return
+        # Patch ytmusicapi session so ALL endpoints raise on sign-in pages,
+        # not just get_liked_songs (library/playlists silently return []).
+        self._patch_signin_detection(self._ytmusic)
         any_auth_error = False
         any_success = False
 

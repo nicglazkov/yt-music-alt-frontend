@@ -12,7 +12,7 @@ security = HTTPBearer(auto_error=False)
 
 # {token: expiry_timestamp}
 _tokens: dict[str, float] = {}
-TOKEN_TTL = 8 * 60 * 60  # 8 hours
+TOKEN_TTL = 30 * 24 * 60 * 60  # 30 days
 
 
 class LoginRequest(BaseModel):
